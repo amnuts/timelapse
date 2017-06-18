@@ -65,6 +65,12 @@ GPIO.setup(config['button_pin'], GPIO.IN, pull_up_down=GPIO.PUD_UP)
 GPIO.add_event_detect(config['button_pin'], GPIO.RISING, callback=button_pushed, bouncetime=200)
 
 if config['debug']:
+    print('Kicking off start-up LED flash')
+
+t = threading.Thread(target=flash_led, args=[3, True])
+t.start()
+
+if config['debug']:
     print('Checking if lapse cache value exists')
 
 if os.path.isfile(cache_file):
@@ -74,16 +80,21 @@ if os.path.isfile(cache_file):
     if config['debug']:
         print('Lapse cache file exists and is at {}'.format(lapse))
 
-if config['debug']:
-    print('Entering main loop')
-
 try:
     if config['debug']:
-        print('Kicking off start-up LED flash')
-    t = threading.Thread(target=flash_led, args=[3, True])
-    t.start()
-    while True:
-        with picamera.PiCamera() as camera:
+        print('Setting up camera defaults')
+    with picamera.PiCamera() as camera:
+        camera.resolution = (1920, 1080)
+        camera.framerate = 30
+        time.sleep(2)
+        camera.shutter_speed = camera.exposure_speed
+        camera.exposure_mode = 'off'
+        g = camera.awb_gains
+        camera.awb_mode = 'off'
+        camera.awb_gains = g
+        if config['debug']:
+            print('Entering main loop')
+        while True:
             while running:
                 if config['debug']:
                     print('In run loop')
