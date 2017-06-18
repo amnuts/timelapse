@@ -3,5 +3,5 @@
   "led_pin": 22,
   "sleep_seconds": 2,
   "debug": false,
-  "save_path": "~/timelapse/set-%04d/img{counter:04d}.jpg"
+  "save_path": "/home/pi/timelapse/set-{0:04d}"
 }

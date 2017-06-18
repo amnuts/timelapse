@@ -6,20 +6,25 @@ import picamera
 import RPi.GPIO as GPIO
 
 lapse = 0
+save_path = ''
 running = False
 
 
 def button_pushed(channel):
-    global lapse, running
+    global lapse, save_path, running
     if config['debug']:
-        print('Button on pin %d pushed' % channel)
-        ++lapse
-        if not running:
-            print('Starting capture run %d' % lapse)
+        print('Button on pin {} pushed'.format(channel))
+    if not running:
+        lapse += 1
+        save_path = config['save_path'].format(lapse)
+        if not os.path.exists(save_path):
+            os.makedirs(save_path)
         running = True
+        if config['debug']:
+            print('Starting capture run {0} on path {1}'.format(lapse, save_path))
     else:
         if not running:
-            print('Ending capture run %d' % lapse)
+            print('Ending capture run {}'.format(lapse))
         running = False
 
 
@@ -29,7 +34,7 @@ def flash_led(times, long_end=False):
         print('Running LED thread')
     for x in range(times):
         if config['debug']:
-            print('Flash number %d' % x)
+            print('Flash number {}'.format(x))
         GPIO.output(config['led_pin'], 1)
         time.sleep(0.5)
         GPIO.output(config['led_pin'], 0)
@@ -67,9 +72,9 @@ try:
             while running:
                 if config['debug']:
                     print('In run loop')
-                for filename in camera.capture_continuous(config['save_path'] % lapse):
+                for filename in camera.capture_continuous(save_path + '/img{counter:04d}.jpg'):
                     if config['debug']:
-                        print('Captured %s and starting LED flash' % filename)
+                        print('Captured {} and starting LED flash'.format(filename))
                     t = threading.Thread(target=flash_led, args=[1])
                     t.start()
                     if config['debug']:
@@ -81,5 +86,11 @@ try:
                         break
             if config['debug']:
                 print('Not capturing on this loop')
+
+except KeyboardInterrupt:
+    if config['debug']:
+        print('Keyboard interrupt, exiting script')
+
 finally:
+    running = False
     GPIO.cleanup()
