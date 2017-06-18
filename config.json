@@ -1,5 +1,6 @@
 {
   "button_pin": 18,
   "sleep_seconds": 2,
-  "debug": false
+  "debug": false,
+  "save_path": "~/timelapse/set-%04d/img{counter:04d}.jpg"
 }
