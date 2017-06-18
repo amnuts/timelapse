@@ -36,37 +36,3 @@ try:
                         break
 finally:
     GPIO.cleanup()
-
-
-try:
-    while True:
-        with picamera.PiCamera() as camera:
-            while running:
-                for filename in camera.capture_continuous('img{counter:03d}.jpg'):
-                    print('Captured %s' % filename)
-                    time.sleep(300)  # wait 5 minutes
-
-    while True:
-        if (GPIO.input(10) == False):
-            print("Button Pressed")
-            os.system('date')  # print the systems date and time
-            print GPIO.input(10)
-            sleep(5)
-        else:
-            os.system('clear')  # clear the screens text
-            print ("Waiting for you to press a button")
-            sleep(0.1)
-
-    with picamera.PiCamera() as camera:
-        camera.start_preview()
-        try:
-            for i, filename in enumerate(camera.capture_continuous('image{counter:02d}.jpg')):
-                print(filename)
-                time.sleep(1)
-                if i == 59:
-                    break
-        finally:
-            camera.stop_preview()
-
-finally:
-    GPIO.cleanup()
