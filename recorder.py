@@ -28,7 +28,7 @@ try:
     while True:
         with picamera.PiCamera() as camera:
             while running:
-                for filename in camera.capture_continuous('~/timelapse/img{counter:04d}.jpg'):
+                for filename in camera.capture_continuous('~/timelapse-%04d/img{counter:04d}.jpg' % lapse):
                     if config['debug']:
                         print('Captured %s' % filename)
                     time.sleep(config['sleep_seconds'])
