@@ -5,18 +5,14 @@ import time
 import picamera
 import RPi.GPIO as GPIO
 
-lapse = 0
-save_path = ''
-running = False
-
 
 def button_pushed(channel):
-    global lapse, save_path, running
+    global lapse, save_path, running, cache_file
     if config['debug']:
         print('Button on pin {} pushed'.format(channel))
     if not running:
         lapse += 1
-        save_path = config['save_path'].format(lapse)
+        save_path = '{0}/set-{1:04d}'.format(config['save_path'], lapse)
         if not os.path.exists(save_path):
             os.makedirs(save_path)
         running = True
@@ -26,6 +22,9 @@ def button_pushed(channel):
         if not running:
             print('Ending capture run {}'.format(lapse))
         running = False
+        lapse_cache = open(cache_file, 'w')
+        lapse_cache.write(str(lapse))
+        lapse_cache.close()
 
 
 def flash_led(times, long_end=False):
@@ -46,10 +45,16 @@ def flash_led(times, long_end=False):
         time.sleep(2)
         GPIO.output(config['led_pin'], 0)
 
-print('Loading timelapse capture software')
+
+print('Loading timelapse capture script')
 
 with open(os.path.dirname(os.path.realpath(__file__)) + '/config.json', 'r') as f:
     config = json.load(f)
+
+lapse = 0
+save_path = ''
+cache_file = '{0}/.lapse'.format(config['save_path'])
+running = False
 
 if config['debug']:
     print('Setting pins and callback')
@@ -58,6 +63,16 @@ GPIO.setmode(GPIO.BCM)
 GPIO.setup(config['led_pin'], GPIO.OUT)
 GPIO.setup(config['button_pin'], GPIO.IN, pull_up_down=GPIO.PUD_UP)
 GPIO.add_event_detect(config['button_pin'], GPIO.RISING, callback=button_pushed, bouncetime=200)
+
+if config['debug']:
+    print('Checking if lapse cache value exists')
+
+if os.path.isfile(cache_file):
+    lapse_cache = open(cache_file, 'r')
+    lapse = int(float(lapse_cache.readlines()[0]))
+    lapse_cache.close()
+    if config['debug']:
+        print('Lapse cache file exists and is at {}'.format(lapse))
 
 if config['debug']:
     print('Entering main loop')
